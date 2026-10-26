@@ -6,6 +6,7 @@ const pool = require('./db');
 
 const app = express();
 app.use(express.json());
+app.use(express.static(require('path').join(__dirname, 'public')));
 
 function auth(req, res, next) {
   const header = req.headers.authorization || '';

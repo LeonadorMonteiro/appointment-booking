@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Appointment Booking</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #f4f6f8; margin: 0; color: #1f2933; }
+  header { background: #243b53; color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  header h1 { margin: 0; font-size: 20px; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px; }
+  section { background: #fff; border-radius: 10px; padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  h2 { margin-top: 0; font-size: 18px; }
+  input, select, button { font: inherit; padding: 9px 11px; border-radius: 6px; border: 1px solid #cbd2d9; }
+  input, select { width: 100%; margin-bottom: 8px; }
+  button { background: #2f6fed; color: #fff; border: none; cursor: pointer; }
+  button.secondary { background: #829ab1; }
+  button.danger { background: #d64545; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row input { width: auto; margin: 0; }
+  .card { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid #e4e7eb; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+  small { color: #52606d; }
+  #msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; display: none; }
+  #msg.ok { background: #e3f9e5; color: #0e5814; display: block; }
+  #msg.err { background: #ffe3e3; color: #8a1c1c; display: block; }
+  .hidden { display: none; }
+  .booked { color: #0e5814; } .cancelled { color: #8a1c1c; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Appointment Booking</h1>
+  <div class="row"><span id="who"></span><button id="logoutBtn" class="secondary hidden">Log out</button></div>
+</header>
+<main>
+  <div id="msg"></div>
+
+  <section id="authBox">
+    <h2>Log in or create an account</h2>
+    <input id="name" placeholder="Name (only to register)">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <select id="role">
+      <option value="client">I am a client (I book appointments)</option>
+      <option value="owner">I am a business owner (I offer services)</option>
+    </select>
+    <div class="row">
+      <button id="loginBtn">Log in</button>
+      <button id="registerBtn" class="secondary">Register</button>
+    </div>
+  </section>
+
+  <div id="appBox" class="hidden">
+    <section id="ownerBox" class="hidden">
+      <h2>Add a service</h2>
+      <input id="svcName" placeholder="Service name (e.g. Haircut)">
+      <div class="row">
+        <input id="svcMinutes" type="number" min="1" placeholder="Minutes">
+        <input id="svcPrice" type="number" min="0" placeholder="Price">
+        <button id="addSvcBtn">Add</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Services</h2>
+      <div id="services"></div>
+    </section>
+
+    <section>
+      <h2>My appointments</h2>
+      <div id="mine"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+let token = null;
+try { token = localStorage.getItem('token'); } catch (e) {}
+let user = null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function show(text, ok) {
+  const m = $('msg');
+  m.textContent = text;
+  m.className = ok ? 'ok' : 'err';
+  setTimeout(() => { m.className = ''; }, 5000);
+}
+
+function parseToken(t) {
+  try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return null; }
+}
+
+async function api(path, method, body) {
+  const res = await fetch(path, {
+    method: method || 'GET',
+    headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && token) { logout(); throw new Error('Session expired, please log in again'); }
+  if (!res.ok) throw new Error(data.error || 'Something went wrong');
+  return data;
+}
+
+function logout() {
+  token = null;
+  try { localStorage.removeItem('token'); } catch (e) {}
+  render();
+}
+
+async function login() {
+  const data = await api('/login', 'POST', { email: $('email').value, password: $('password').value });
+  token = data.token;
+  try { localStorage.setItem('token', token); } catch (e) {}
+  $('password').value = '';
+  await render();
+}
+
+async function render() {
+  user = token ? parseToken(token) : null;
+  $('authBox').classList.toggle('hidden', !!user);
+  $('appBox').classList.toggle('hidden', !user);
+  $('logoutBtn').classList.toggle('hidden', !user);
+  $('who').textContent = user ? 'Logged in as ' + user.role : '';
+  if (!user) return;
+  $('ownerBox').classList.toggle('hidden', user.role !== 'owner');
+  try {
+    const services = await api('/services');
+    $('services').innerHTML = services.map((s) =>
+      '<div class="card"><div><b>' + esc(s.name) + '</b><br><small>' + esc(s.owner_name) + ' · ' + esc(s.duration_minutes) + ' min · $' + esc(s.price) + '</small></div>' +
+      (user.role === 'client' ? '<div class="row"><input type="datetime-local" id="dt' + s.id + '"><button data-book="' + s.id + '">Book</button></div>' : '') +
+      '</div>').join('') || '<p>No services yet.</p>';
+    const mine = await api('/appointments/mine');
+    $('mine').innerHTML = mine.map((a) =>
+      '<div class="card"><div><b>' + esc(a.service) + '</b> · ' + esc(a.business || a.client) + '<br><small>' + new Date(a.starts_at).toLocaleString() + ' · <span class="' + esc(a.status) + '">' + esc(a.status) + '</span></small></div>' +
+      (a.status === 'booked' ? '<button class="danger" data-cancel="' + a.id + '">Cancel</button>' : '') +
+      '</div>').join('') || '<p>No appointments yet.</p>';
+  } catch (e) { show(e.message, false); }
+}
+
+$('loginBtn').onclick = () => login().catch((e) => show(e.message, false));
+$('registerBtn').onclick = async () => {
+  try {
+    await api('/register', 'POST', { name: $('name').value, email: $('email').value, password: $('password').value, role: $('role').value });
+    show('Account created! Logging you in...', true);
+    await login();
+  } catch (e) { show(e.message, false); }
+};
+$('logoutBtn').onclick = logout;
+$('addSvcBtn').onclick = async () => {
+  try {
+    await api('/services', 'POST', { name: $('svcName').value, duration_minutes: parseInt($('svcMinutes').value, 10), price: Number($('svcPrice').value) });
+    $('svcName').value = ''; $('svcMinutes').value = ''; $('svcPrice').value = '';
+    show('Service added', true);
+    await render();
+  } catch (e) { show(e.message, false); }
+};
+document.addEventListener('click', async (ev) => {
+  const book = ev.target.dataset.book;
+  const cancel = ev.target.dataset.cancel;
+  try {
+    if (book) {
+      const value = $('dt' + book).value;
+      if (!value) return show('Pick a date and time first', false);
+      await api('/appointments', 'POST', { service_id: Number(book), starts_at: new Date(value).toISOString() });
+      show('Appointment booked!', true);
+      await render();
+    }
+    if (cancel) {
+      await api('/appointments/' + cancel + '/cancel', 'PATCH');
+      show('Appointment cancelled', true);
+      await render();
+    }
+  } catch (e) { show(e.message, false); }
+});
+
+render();
+</script>
+</body>
+</html>
