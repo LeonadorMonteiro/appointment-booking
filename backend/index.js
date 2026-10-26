@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.send('¡Hola! El servidor de turnos funciona');
+  res.send('Hello! The appointment booking server is running');
 });
 
 app.listen(3000, () => {

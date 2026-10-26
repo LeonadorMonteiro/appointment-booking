@@ -1,4 +1,4 @@
-# Turnos App
+# Appointment Booking
 
 Online appointment booking system for small businesses (hair salons, clinics, sports courts).
 
