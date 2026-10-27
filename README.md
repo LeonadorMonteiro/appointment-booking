@@ -1,20 +1,34 @@
 # Appointment Booking
 
-REST API for online appointment booking at small businesses (hair salons, clinics, sports courts). Business owners publish services, clients book time slots, and the system prevents double bookings.
+Full-stack web app for online appointment booking at small businesses (hair salons, clinics, sports courts). Business owners publish services, clients book time slots, and the system prevents double bookings.
+
+**Live demo:** https://appointment-booking-ooz7.onrender.com
+
+> The demo runs on a free hosting plan. If nobody has visited for a while, the first request can take up to a minute while the server wakes up.
+
+## How to try it
+
+1. Open the live demo and create an account as a **business owner**
+2. Add a service (for example, "Haircut", 60 minutes)
+3. Log out and create a second account as a **client**
+4. Book an appointment. Try booking an overlapping time slot: the system rejects it
 
 ## Features
 
-- User registration and login with hashed passwords (bcrypt) and JWT authentication
+- Registration and login with hashed passwords (bcrypt) and JWT authentication
 - Two roles: `owner` (publishes services) and `client` (books appointments)
 - Overlap detection: a time slot already taken at the same business is rejected
 - Clients and owners can list and cancel their own appointments
 - Input validation and role-based access control
+- Responsive web interface served by the same Express server
 
 ## Tech stack
 
-- Node.js and Express
-- PostgreSQL (`pg`)
-- JWT (`jsonwebtoken`) and `bcryptjs`
+- **Backend:** Node.js, Express
+- **Database:** PostgreSQL (`pg`), hosted on Neon
+- **Auth:** JWT (`jsonwebtoken`), `bcryptjs`
+- **Frontend:** HTML, CSS and vanilla JavaScript
+- **Hosting:** Render
 
 ## API endpoints
 
@@ -35,16 +49,15 @@ Protected routes need the header `Authorization: Bearer YOUR_TOKEN`.
 
 1. Clone the repository and go into the `backend` folder
 2. Install dependencies with `npm install`
-3. Create a PostgreSQL database named `appointments`
-4. Create the tables with `psql -d appointments -f schema.sql`
-5. Create a `.env` file with `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` and `JWT_SECRET`
-6. Start the server with `node index.js`
-7. Open http://localhost:3000
+3. Create a PostgreSQL database and load the tables with `psql -d YOUR_DATABASE -f schema.sql`
+4. Create a `.env` file with `JWT_SECRET` and either `DATABASE_URL` or `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+5. Start the server with `npm start`
+6. Open http://localhost:3000
 
 ## Roadmap
 
-- React frontend
 - Business opening hours and availability
+- Email notifications
+- React version of the frontend
 - MercadoPago payments
 - Automated tests
-- Live deployment
