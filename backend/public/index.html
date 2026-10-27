@@ -4,80 +4,164 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Appointment Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #F6F7F5; --paper: #FFFFFF; --ink: #1F2B28; --muted: #66746F;
+    --line: #DCE3DF; --accent: #2E5B4E; --soft: #E7F0EB; --danger: #9C3F36;
+  }
   * { box-sizing: border-box; }
-  body { font-family: system-ui, sans-serif; background: #f4f6f8; margin: 0; color: #1f2933; }
-  header { background: #243b53; color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-  header h1 { margin: 0; font-size: 20px; }
-  main { max-width: 760px; margin: 0 auto; padding: 20px; }
-  section { background: #fff; border-radius: 10px; padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-  h2 { margin-top: 0; font-size: 18px; }
-  input, select, button { font: inherit; padding: 9px 11px; border-radius: 6px; border: 1px solid #cbd2d9; }
-  input, select { width: 100%; margin-bottom: 8px; }
-  button { background: #2f6fed; color: #fff; border: none; cursor: pointer; }
-  button.secondary { background: #829ab1; }
-  button.danger { background: #d64545; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .row input { width: auto; margin: 0; }
-  .card { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid #e4e7eb; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
-  small { color: #52606d; }
-  #msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; display: none; }
-  #msg.ok { background: #e3f9e5; color: #0e5814; display: block; }
-  #msg.err { background: #ffe3e3; color: #8a1c1c; display: block; }
-  .hidden { display: none; }
-  .booked { color: #0e5814; } .cancelled { color: #8a1c1c; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Manrope', system-ui, sans-serif; line-height: 1.55; }
+  h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 400; margin: 0; }
+  p { margin: 0; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 22px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hidden { display: none !important; }
+
+  header { border-bottom: 1px solid var(--line); }
+  header .wrap { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; padding-bottom: 20px; gap: 12px; }
+  .brand { font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 500; }
+  .who { color: var(--muted); font-size: 14px; display: flex; align-items: center; gap: 14px; }
+
+  .hero { padding: 56px 0 30px; }
+  .hero h1 { font-size: clamp(34px, 7vw, 52px); line-height: 1.08; letter-spacing: -0.01em; max-width: 14ch; }
+  .hero p { color: var(--muted); margin-top: 16px; max-width: 42ch; font-size: 17px; }
+
+  .auth { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 24px; max-width: 460px; margin-bottom: 60px; }
+  .seg { display: flex; background: var(--soft); border-radius: 999px; padding: 4px; margin-bottom: 18px; }
+  .seg button { flex: 1; background: transparent; color: var(--muted); border: none; border-radius: 999px; padding: 8px 12px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .15s, color .15s; }
+  .seg button.on { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgba(31,43,40,.12); }
+  label { display: block; font-size: 14px; font-weight: 500; margin: 0 0 6px; }
+  input { width: 100%; font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 11px 13px; margin-bottom: 14px; }
+  input::placeholder { color: #9AA7A2; }
+
+  .btn { background: var(--accent); color: #fff; border: none; border-radius: 999px; padding: 11px 22px; font: inherit; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .btn:hover { background: #244A3F; }
+  .btn.small { padding: 8px 18px; font-size: 14px; }
+  .btn.block { width: 100%; }
+  .link { background: none; border: none; color: var(--accent); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+  .link.danger { color: var(--danger); }
+
+  section.block { padding: 44px 0 8px; }
+  section.block h2 { font-size: 28px; }
+  section.block > .sub { color: var(--muted); margin: 6px 0 22px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+
+  .svc { padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .svc-top { display: flex; align-items: baseline; gap: 12px; }
+  .svc-top h3 { font-size: 22px; }
+  .leader { flex: 1; border-bottom: 1px dotted #AEBBB6; transform: translateY(-4px); min-width: 20px; }
+  .price { font-family: 'Fraunces', Georgia, serif; font-size: 22px; }
+  .meta { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .book { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .book input { width: auto; flex: 1; min-width: 200px; margin: 0; }
+
+  .appt { display: grid; grid-template-columns: 74px 1fr auto; gap: 18px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .date { text-align: center; border-right: 1px solid var(--line); padding-right: 18px; }
+  .day { display: block; font-family: 'Fraunces', Georgia, serif; font-size: 34px; line-height: 1; }
+  .mon { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .appt h3 { font-size: 20px; }
+  .appt-side { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; font-size: 14px; }
+  .status { font-weight: 600; color: var(--accent); }
+  .appt.cancelled { opacity: .55; }
+  .appt.cancelled .status { color: var(--danger); }
+  .empty { color: var(--muted); padding: 10px 0 4px; }
+
+  .grid3 { display: grid; grid-template-columns: 1fr 120px 120px; gap: 12px; }
+  .grid3 input { margin-bottom: 0; }
+  .add-form { display: grid; gap: 12px; max-width: 560px; }
+  .add-form .btn { justify-self: start; }
+
+  #msg { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: 90vw; padding: 12px 20px; border-radius: 10px; color: #fff; font-size: 14px; display: none; z-index: 10; }
+  #msg.ok { display: block; background: var(--accent); }
+  #msg.err { display: block; background: var(--danger); }
+  footer { padding: 50px 0 40px; color: var(--muted); font-size: 13px; }
+
+  @media (max-width: 560px) {
+    .grid3 { grid-template-columns: 1fr 1fr; }
+    .grid3 input:first-child { grid-column: 1 / -1; }
+    .appt { grid-template-columns: 60px 1fr; }
+    .appt-side { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>Appointment Booking</h1>
-  <div class="row"><span id="who"></span><button id="logoutBtn" class="secondary hidden">Log out</button></div>
+  <div class="wrap">
+    <span class="brand">Appointment Booking</span>
+    <div class="who hidden" id="whoBox"><span id="who"></span><button class="link" id="logoutBtn">Log out</button></div>
+  </div>
 </header>
-<main>
-  <div id="msg"></div>
 
-  <section id="authBox">
-    <h2>Log in or create an account</h2>
-    <input id="name" placeholder="Name (only to register)">
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <select id="role">
-      <option value="client">I am a client (I book appointments)</option>
-      <option value="owner">I am a business owner (I offer services)</option>
-    </select>
-    <div class="row">
-      <button id="loginBtn">Log in</button>
-      <button id="registerBtn" class="secondary">Register</button>
+<main class="wrap">
+  <div id="guest">
+    <div class="hero">
+      <h1>Book your appointment in a minute</h1>
+      <p>Choose a service, pick a time, and you are set. Business owners can publish their services and see who is coming.</p>
     </div>
-  </section>
+    <form class="auth" id="authForm">
+      <div class="seg" id="modeSeg">
+        <button type="button" data-mode="login" class="on">Log in</button>
+        <button type="button" data-mode="register">Create account</button>
+      </div>
+      <div id="registerOnly" class="hidden">
+        <label for="name">Name</label>
+        <input id="name" autocomplete="name" placeholder="Your name or your business name">
+        <label>I am</label>
+        <div class="seg" id="roleSeg">
+          <button type="button" data-role="client" class="on">A client</button>
+          <button type="button" data-role="owner">A business owner</button>
+        </div>
+      </div>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Your password" required>
+      <button class="btn block" id="submitBtn" type="submit">Log in</button>
+    </form>
+  </div>
 
-  <div id="appBox" class="hidden">
-    <section id="ownerBox" class="hidden">
+  <div id="app" class="hidden">
+    <section class="block hidden" id="ownerBox">
       <h2>Add a service</h2>
-      <input id="svcName" placeholder="Service name (e.g. Haircut)">
-      <div class="row">
-        <input id="svcMinutes" type="number" min="1" placeholder="Minutes">
-        <input id="svcPrice" type="number" min="0" placeholder="Price">
-        <button id="addSvcBtn">Add</button>
+      <p class="sub">Clients will see it right away and can book it.</p>
+      <div class="add-form">
+        <div>
+          <label for="svcName">Service name</label>
+          <input id="svcName" placeholder="Haircut" style="margin-bottom:0">
+        </div>
+        <div class="grid3" style="grid-template-columns:140px 140px;">
+          <div><label for="svcMinutes">Minutes</label><input id="svcMinutes" type="number" min="1" placeholder="60"></div>
+          <div><label for="svcPrice">Price</label><input id="svcPrice" type="number" min="0" placeholder="5000"></div>
+        </div>
+        <button class="btn" id="addSvcBtn">Add service</button>
       </div>
     </section>
 
-    <section>
+    <section class="block">
       <h2>Services</h2>
-      <div id="services"></div>
+      <p class="sub" id="svcSub">Pick a service and a time to book it.</p>
+      <ul id="services"></ul>
     </section>
 
-    <section>
-      <h2>My appointments</h2>
-      <div id="mine"></div>
+    <section class="block">
+      <h2>Your appointments</h2>
+      <p class="sub">Upcoming and past bookings.</p>
+      <ul id="mine"></ul>
     </section>
   </div>
 </main>
 
+<footer><div class="wrap">Built with Node.js, Express and PostgreSQL.</div></footer>
+<div id="msg" role="status" aria-live="polite"></div>
+
 <script>
 let token = null;
 try { token = localStorage.getItem('token'); } catch (e) {}
-let user = null;
+let user = null, mode = 'login', role = 'client', msgTimer = null;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -85,7 +169,8 @@ function show(text, ok) {
   const m = $('msg');
   m.textContent = text;
   m.className = ok ? 'ok' : 'err';
-  setTimeout(() => { m.className = ''; }, 5000);
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(() => { m.className = ''; }, 4500);
 }
 
 function parseToken(t) {
@@ -99,8 +184,8 @@ async function api(path, method, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && token) { logout(); throw new Error('Session expired, please log in again'); }
-  if (!res.ok) throw new Error(data.error || 'Something went wrong');
+  if (res.status === 401 && token) { logout(); throw new Error('Your session expired. Log in again.'); }
+  if (!res.ok) throw new Error(data.error || 'Something went wrong. Try again.');
   return data;
 }
 
@@ -118,33 +203,60 @@ async function login() {
   await render();
 }
 
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('#modeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+  $('registerOnly').classList.toggle('hidden', m !== 'register');
+  $('submitBtn').textContent = m === 'register' ? 'Create account' : 'Log in';
+  $('password').autocomplete = m === 'register' ? 'new-password' : 'current-password';
+}
+
+function money(v) { return '$' + Number(v).toLocaleString('en-US'); }
+
 async function render() {
   user = token ? parseToken(token) : null;
-  $('authBox').classList.toggle('hidden', !!user);
-  $('appBox').classList.toggle('hidden', !user);
-  $('logoutBtn').classList.toggle('hidden', !user);
-  $('who').textContent = user ? 'Logged in as ' + user.role : '';
+  $('guest').classList.toggle('hidden', !!user);
+  $('app').classList.toggle('hidden', !user);
+  $('whoBox').classList.toggle('hidden', !user);
   if (!user) return;
+  $('who').textContent = user.role === 'owner' ? 'Business account' : 'Client account';
   $('ownerBox').classList.toggle('hidden', user.role !== 'owner');
+  $('svcSub').textContent = user.role === 'client' ? 'Pick a service and a time to book it.' : 'All services published on the platform.';
   try {
     const services = await api('/services');
     $('services').innerHTML = services.map((s) =>
-      '<div class="card"><div><b>' + esc(s.name) + '</b><br><small>' + esc(s.owner_name) + ' · ' + esc(s.duration_minutes) + ' min · $' + esc(s.price) + '</small></div>' +
-      (user.role === 'client' ? '<div class="row"><input type="datetime-local" id="dt' + s.id + '"><button data-book="' + s.id + '">Book</button></div>' : '') +
-      '</div>').join('') || '<p>No services yet.</p>';
+      '<li class="svc"><div class="svc-top"><h3>' + esc(s.name) + '</h3><span class="leader"></span><span class="price">' + money(s.price) + '</span></div>' +
+      '<p class="meta">' + esc(s.owner_name) + ', ' + esc(s.duration_minutes) + ' minutes</p>' +
+      (user.role === 'client' ? '<div class="book"><input type="datetime-local" id="dt' + s.id + '" aria-label="Date and time for ' + esc(s.name) + '"><button class="btn small" data-book="' + s.id + '">Book</button></div>' : '') +
+      '</li>').join('') || '<p class="empty">No services yet. Business owners can add the first one.</p>';
     const mine = await api('/appointments/mine');
-    $('mine').innerHTML = mine.map((a) =>
-      '<div class="card"><div><b>' + esc(a.service) + '</b> · ' + esc(a.business || a.client) + '<br><small>' + new Date(a.starts_at).toLocaleString() + ' · <span class="' + esc(a.status) + '">' + esc(a.status) + '</span></small></div>' +
-      (a.status === 'booked' ? '<button class="danger" data-cancel="' + a.id + '">Cancel</button>' : '') +
-      '</div>').join('') || '<p>No appointments yet.</p>';
+    $('mine').innerHTML = mine.map((a) => {
+      const d = new Date(a.starts_at);
+      return '<li class="appt ' + esc(a.status) + '"><div class="date"><span class="day">' + d.getDate() + '</span><span class="mon">' +
+        d.toLocaleString('en-US', { month: 'short', year: 'numeric' }) + '</span></div>' +
+        '<div><h3>' + esc(a.service) + '</h3><p class="meta">' + esc(a.business || a.client) + ', ' +
+        d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</p></div>' +
+        '<div class="appt-side"><span class="status">' + (a.status === 'booked' ? 'Booked' : 'Cancelled') + '</span>' +
+        (a.status === 'booked' ? '<button class="link danger" data-cancel="' + a.id + '">Cancel</button>' : '') + '</div></li>';
+    }).join('') || '<p class="empty">No appointments yet. Pick a service above to book one.</p>';
   } catch (e) { show(e.message, false); }
 }
 
-$('loginBtn').onclick = () => login().catch((e) => show(e.message, false));
-$('registerBtn').onclick = async () => {
+document.querySelectorAll('#modeSeg button').forEach((b) => { b.onclick = () => setMode(b.dataset.mode); });
+document.querySelectorAll('#roleSeg button').forEach((b) => {
+  b.onclick = () => {
+    role = b.dataset.role;
+    document.querySelectorAll('#roleSeg button').forEach((x) => x.classList.toggle('on', x === b));
+  };
+});
+
+$('authForm').onsubmit = async (ev) => {
+  ev.preventDefault();
   try {
-    await api('/register', 'POST', { name: $('name').value, email: $('email').value, password: $('password').value, role: $('role').value });
-    show('Account created! Logging you in...', true);
+    if (mode === 'register') {
+      await api('/register', 'POST', { name: $('name').value, email: $('email').value, password: $('password').value, role });
+      show('Account created. Welcome!', true);
+    }
     await login();
   } catch (e) { show(e.message, false); }
 };
@@ -163,9 +275,9 @@ document.addEventListener('click', async (ev) => {
   try {
     if (book) {
       const value = $('dt' + book).value;
-      if (!value) return show('Pick a date and time first', false);
+      if (!value) return show('Pick a date and time first.', false);
       await api('/appointments', 'POST', { service_id: Number(book), starts_at: new Date(value).toISOString() });
-      show('Appointment booked!', true);
+      show('Appointment booked', true);
       await render();
     }
     if (cancel) {
